@@ -18,7 +18,7 @@ func callUpstreamStruct() error {
 	return nil
 }
 
-// callUpstreamPtrError acts similarly to struct, but instead returns a pointer to the error
+// callUpstreamPtError acts similarly to struct, but instead returns a pointer to the error
 func callUpstreamPtError() error {
 	if err := callHttp(); err != nil {
 		return &ClientError{"sprocket", "cannot connect", err}
@@ -34,7 +34,7 @@ func webServiceStructError() error {
 	return nil
 }
 
-// webServiceStructError simulates a handler calling a provider package getting an error pointer back
+// webServiceReturningPtrError simulates a handler calling a provider package getting an error pointer back
 func webServiceReturningPtrError() error {
 	if err := callUpstreamPtError(); err != nil {
 

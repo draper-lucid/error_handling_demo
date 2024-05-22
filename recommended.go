@@ -8,6 +8,7 @@ import (
 	"log"
 )
 
+// callDatasource represents upstream.Get(), eg. the generic http layer.
 func callDatasource(ctx context.Context) (err error) {
 	// Log should be performed once at the point of failure with context containing all relevant information
 	// the go-logger will handle most of this for you
@@ -23,6 +24,8 @@ func callDatasource(ctx context.Context) (err error) {
 	return HttpUpstreamError{Status: 404, Message: err.Error(), ServiceName: sn, UrlFragment: "/23/ABCDE/fancywidgets", err: err}
 }
 
+// callPackage represents the business-logic layer that bridges the handler and the upstream data sources.
+// this function returns a wrapped error that was returned from the http upstream
 func callPackage(ctx context.Context) (err error) {
 	ctx = context.WithValue(ctx, "service-name", "sprocket")
 	if err = callDatasource(ctx); err != nil {
@@ -47,6 +50,9 @@ func getWidgets(ctx context.Context) (err error) {
 		log.Print(e)
 
 		// At the presentation (endpoint layer) we don't want to expose the actual guts of the system
+		// For this demo I wanted to show that we can cast down to the underlying error type and check for it.
+		// Optionally in callPackage() we could wrap the upstream error as a PackageError{} to further define/abstract it,
+		//   then check for PackageError here and decide what to render.
 		ue := &HttpUpstreamError{}
 		if errors.As(err, ue) {
 			if ue.Status > 399 && ue.Status < 500 {
