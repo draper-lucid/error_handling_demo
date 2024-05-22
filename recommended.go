@@ -36,12 +36,13 @@ func callPackage(ctx context.Context) (err error) {
 	return nil
 }
 
-// webServiceStructError simulates a handler calling a provider package getting an error back
+// getWidgets simulates a handler calling a provider package getting an error back
 func getWidgets(ctx context.Context) (err error) {
 
 	if err = callPackage(ctx); err != nil {
 
-		// Note to get at the underlying error we can unwrap
+		// Note to get at the underlying error we can unwrap via the private `err` property
+		// on structs matching the error interface
 		e := errors.Unwrap(err)
 		log.Print(e)
 
