@@ -8,3 +8,4 @@ Further Reading
 * [Standard Logging Fields](https://cintab.atlassian.net/wiki/spaces/ENG/pages/3386933255/Logging+standardization+proposal+for+Infra+2)
 * [Handling Custom Errors in Go: A Deep Dive into errors.Is and errors.As](https://medium.com/@vijeshomen/handling-custom-errors-in-go-a-deep-dive-into-errors-is-and-errors-as-1428c989c631)
 * [errors package in the go standard library](https://pkg.go.dev/errors)
+* [go-logger PR to add inferred fields](https://github.com/lucidhq/go-logger/pull/29)
