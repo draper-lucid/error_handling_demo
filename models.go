@@ -3,9 +3,8 @@ package main
 import "fmt"
 
 type ClientError struct {
-	ServiceName string `json:"service"`
-	Message     string `json:"message"`
-	err         error
+	Message string `json:"message"`
+	err     error
 }
 
 func (g ClientError) Error() string {
@@ -13,7 +12,6 @@ func (g ClientError) Error() string {
 }
 
 type HttpUpstreamError struct {
-	ServiceName string
 	Status      int
 	Message     string
 	UrlFragment string
@@ -21,5 +19,5 @@ type HttpUpstreamError struct {
 }
 
 func (h HttpUpstreamError) Error() string {
-	return fmt.Sprintf("%s in %s [%d]: %s", h.err.Error(), h.ServiceName, h.Status, h.UrlFragment)
+	return fmt.Sprintf("%s [status: %d]in : %s", h.err.Error(), h.Status, h.UrlFragment)
 }

@@ -2,32 +2,39 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
+	"github.com/lucidhq/go-logger"
 )
 
 // callDatasource represents upstream.Get(), eg. the generic http layer.
 func callDatasource(ctx context.Context) (err error) {
-	// Log should be performed once at the point of failure with context containing all relevant information
-	// the go-logger will handle most of this for you
-	sn := ctx.Value("service-name").(string)
-	a := ctx.Value("account_id").(int)
-	p := ctx.Value("project_id").(string)
 
+	// Imagine this is an error returned from the http package in the go standard library
 	err = errors.New("document not found")
-	fmt.Printf(
-		"%s while executing GET http://sprocket/widgets [service: %s account_id: %d project_id: %s]\n",
-		err.Error(), sn, a, p,
-	)
-	return HttpUpstreamError{Status: 404, Message: err.Error(), ServiceName: sn, UrlFragment: "/23/ABCDE/fancywidgets", err: err}
+
+	msg := fmt.Sprintf("%s while calling sprocket GET http://sprocket/widgets", "error")
+
+	var mykey StandardField = logger.LPAccountID
+	// This simple logging call may include any or all canonical fields for logging automatically when my PR is merged.
+	//log.Errorw(ctx, msg)
+
+	// When go-logger is updated, this will no longer be necessary since LPAccountID is a standard field.
+	// For now I want to show what a standard field looks like in the logs as opposed to metadata.
+	log.Errorw(ctx, msg, mykey, 23)
+
+	// If we need data to be present in structured logging, but not searchable, any keys that are not canonical
+	// will be stored in the metadata field.
+	// Eg.
+	log.Errorw(ctx, msg, mykey, 23, "service_name", "sprocket")
+
+	return HttpUpstreamError{Status: 404, Message: err.Error(), UrlFragment: "/23/ABCDE/fancywidgets", err: err}
 }
 
 // callPackage represents the business-logic layer that bridges the handler and the upstream data sources.
 // this function returns a wrapped error that was returned from the http upstream
 func callPackage(ctx context.Context) (err error) {
-	ctx = context.WithValue(ctx, "service-name", "sprocket")
+
 	if err = callDatasource(ctx); err != nil {
 		// When receiving an error on the callstack, wrap the error for messaging
 		// but keep the original error intact. %w wraps this error "around" the other
@@ -44,11 +51,6 @@ func getWidgets(ctx context.Context) (err error) {
 
 	if err = callPackage(ctx); err != nil {
 
-		// Note to get at the underlying error we can unwrap via the private `err` property
-		// on structs matching the error interface
-		e := errors.Unwrap(err)
-		log.Print(e)
-
 		// At the presentation (endpoint layer) we don't want to expose the actual guts of the system
 		// For this demo I wanted to show that we can cast down to the underlying error type and check for it.
 		// Optionally in callPackage() we could wrap the upstream error as a PackageError{} to further define/abstract it,
@@ -58,7 +60,7 @@ func getWidgets(ctx context.Context) (err error) {
 			if ue.Status > 399 && ue.Status < 500 {
 				// Note we have access to any property that was properly assigned at origin.
 				// we present the error the way we need to, relating the information we want the way we want.
-				return ClientError{ServiceName: ue.ServiceName, Message: "sorry, couldn't get widgets", err: err}
+				return ClientError{Message: "sorry, couldn't get widgets", err: err}
 			}
 
 		}
@@ -69,19 +71,4 @@ func getWidgets(ctx context.Context) (err error) {
 	return nil
 }
 
-// demoRecommendation demonstrates the behavior of errorCatch() middleware at the application/service level.
-func demoRecommendation() {
-
-	ctx := context.TODO()
-	ctx = context.WithValue(ctx, "account_id", 23)
-	ctx = context.WithValue(ctx, "project_id", "ABCDE")
-
-	if err := getWidgets(ctx); err != nil {
-
-		ce := &ClientError{}
-		if errors.As(err, ce) {
-			b, _ := json.Marshal(ce)
-			fmt.Println(string(b))
-		}
-	}
-}
+type StandardField string
